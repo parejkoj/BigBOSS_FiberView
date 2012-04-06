@@ -18,7 +18,7 @@ Example:
 # from numpy import *
 # from pylab import *
 
-# import pyfits
+import pyfits
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -93,7 +93,7 @@ class SimCCD:
         self.image += np.random.poisson(15*t,self.image.size).reshape(self.image.shape)
     #...
 
-    def __call__(self,Npoints=None,layout='Baltay_default'):
+    def __call__(self,Npoints=None,layout='Baltay_default',width=2.,height=40000.):
         """
         Generates an image with Npoints distributed by layout.
         Valid options for layout are:
@@ -102,7 +102,9 @@ class SimCCD:
             Baltay_default
             ???
         """
-        gaussian = Gaussian(2)
+        self.image[:] = 0
+        self.image_int[:] = 0
+        gaussian = Gaussian(width,height=height)
         if layout == 'Baltay_default':
             coordinates = np.loadtxt('../Baltay-fibers_residual.csv')
             for c in coordinates:

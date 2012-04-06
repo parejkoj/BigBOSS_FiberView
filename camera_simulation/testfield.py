@@ -13,8 +13,11 @@ import simccd2
 
 # inside a python window, do this:
 
-simCCD = simccd2.SimCCD(Ndim=(1000,1000))
+simCCD = simccd2.SimCCD(Ndim=(1024,1024))
 simCCD(100,layout='Baltay_default')
+
+simCCD.save('testimage_noise.fits')
+sys.exit()
 
 imcopy = simCCD.image.copy() # save a copy of the image
 simCCD.dark_current()
