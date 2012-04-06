@@ -18,7 +18,7 @@ Example:
 # from numpy import *
 # from pylab import *
 
-import pyfits
+# import pyfits
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -74,11 +74,7 @@ class SimCCD:
         Replace every pixel value in self.image with a Poisson random
         variable drawn from its own distribution.
         """
-        self.image[i][j] = [map(np.random.poisson,range(self.Nx))][map(np.random.poisson,range(self.Ny))]
-        
-        # for i in range(self.Nx):
-            # for j in range(self.Ny):
-                # self.image[i][j] = np.random.poisson(self.image[i][j])
+        self.image = np.random.poisson(self.image)
     #...
 
     def read_noise(self):
@@ -86,25 +82,15 @@ class SimCCD:
         Adds read noise to every pixel value, using the parameters
         of the Kodak CCD.
         """
-        self.image[i][j] = [map(+ np.random.normal(12.5),range(self.Nx))][map(+ np.random.normal(12.5),range(self.Ny))]
-                # self.image[i][j] = [map(+= np.random.normal(12.5),range(self.Nx))][map(+= np.random.normal(12.5),range(self.Ny))]
-
-        # for i in range(self.Nx):
-            # for j in range(self.Ny):
-                # self.image[i][j] += np.random.normal(12.5)
+        self.image += np.random.normal(12.5,size=self.image.size).reshape(self.image.shape)
     #...
     
     def dark_current(self,t=1,T=296):
         """
         Adds dark current to every pixel value, assuming temperature T
         (in degrees Celcius) and exposure duration t (in seconds).
-        """        
-        self.image [i][j] = [map(+ 15*t,range(self.Nx))][map(+ 15*t,range(self.Ny))]
-        # self.image [i][j] = [map(+= 15*t,range(self.Nx))][map(+= 15*t,range(self.Ny))]
-
-        for i in range(self.Nx):
-            for j in range(self.Ny):
-                self.image[i][j] += 15*t
+        """
+        self.image += np.random.poisson(15*t,self.image.size).reshape(self.image.shape)
     #...
 
     def __call__(self,Npoints=None,layout='Baltay_default'):
@@ -118,76 +104,10 @@ class SimCCD:
         """
         gaussian = Gaussian(2)
         if layout == 'Baltay_default':
-            coordinates = np.loadtxt('Baltay-fibers_residual.csv')
-            # coordinates = [[0.000,0.000],
-         # [0.000,-120.000],
-         # [103.923,-60.000],
-         # [103.923,60.000],
-         # [0.000,120.000],
-         # [207.846,-120.000],
-         # [240.000,0.000],
-         # [207.846,120.000],
-         # [120.000,207.846],
-         # [0.000,240.000],
-         # [354.531,-62.513],
-         # [354.531,62.514],
-         # [311.769,180.000],
-         # [231.403,275.776],
-         # [463.644,-124.233],
-         # [480.000,0.000],
-         # [463.644,124.233],
-         [415.692,240.000]]
-            # np.loadtxt('Baltay-fibers_residual.csv')
+            coordinates = np.loadtxt('../Baltay-fibers_residual.csv')
             for c in coordinates:
                 self.image += gaussian(c[3],c[4],xygrid=self.xygrid)
-            coordinates = np.loadtxt('Baltay-fibers_random.csv')
-        # coordinates = [[427.580,26.662],
-        # [38.179,139.204],
-        # [113.216,-19.674],
-        # [80.793,-0.737],
-        # [168.867,-45.043],
-        # [24.339,194.961],
-        # [291.616,-16.767],
-        # [53.059,54.082],
-        # [284.854,-85.151],
-        # [119.787,-96.488],
-        # [358.881,92.067],
-        # [479.870,27.114],
-        # [154.306,-84.022],
-        # [207.077,237.172],
-        # [337.906,234.332],
-        # [393.574,261.788],
-        # [426.812,5.605],
-        # [409.772,0.227],
-        # [95.702,35.513],
-        # [182.104,4.770],
-        # [190.652,-110.737],
-        # [134.446,107.362],
-        # [238.088,-81.042],
-        # [123.950,32.216],
-        # [165.289,218.759],
-        # [67.968,188.407],
-        # [179.692,79.141],
-        # [154.166,162.511],
-        # [212.239,169.032],
-        # [371.963,263.334],
-        # [154.042,-46.999],
-        # [123.555,150.778],
-        # [192.932,20.614],
-        # [154.550,149.070],
-        # [76.317,29.809],
-        # [352.885,43.599],
-        # [417.108,-44.411],
-        # [113.831,253.659],
-        # [86.202,-107.610],
-        # [336.788,-39.042],
-        # [9.031,207.260],
-        # [101.543,-37.310],
-        # [241.931,38.295],
-        # [348.878,101.515],
-        # [454.260,103.724],
-        # [45.129,197.040]]
-            # np.loadtxt('Baltay-fibers_random.csv')
+            coordinates = np.loadtxt('../Baltay-fibers_random.csv')
             for c in coordinates:
                 self.image += gaussian(c[1],c[2],xygrid=self.xygrid)
         elif layout == 'xygrid':
