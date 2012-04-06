@@ -44,7 +44,7 @@ class Gaussian:
             x,y = xygrid
 
         def gauss(x,y,height,sigma):
-            return height*np.exp(-(((center_x-x)/self.sigma)**2+((center_y-y)/self.sigma)**2)/2)
+            return height*np.exp(-(((center_x-x)/self.sigma)**2+((center_y-y)/sigma)**2)/2.)
 
         return gauss(x,y,self.height,self.sigma)
     #...
@@ -101,6 +101,8 @@ class SimCCD:
             random
             Baltay_default
             ???
+        width is the width of the Gaussian (==RMS), in pixels.
+        height is the value of the peak of the Gaussian.
         """
         self.image[:] = 0
         self.image_int[:] = 0
@@ -127,9 +129,12 @@ class SimCCD:
         np.round(self.image,out=self.image_int)
     #...
     
-    def save(self,filename):
-        """Save the current image to a .fits file named filename."""
+    def save(self,filename,clobber=False):
+        """
+        Save the current image to a .fits file named filename.
+
+        Set clobber=True to overwrite the file if it exists."""
         hdu = pyfits.PrimaryHDU(self.image_int)
-        hdu.writeto(filename)
+        hdu.writeto(filename,clobber=clobber)
     #...
 #...

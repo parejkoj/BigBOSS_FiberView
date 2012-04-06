@@ -89,11 +89,9 @@ def plot_hist(dist,flux):
             height = -1
             label = 'full noise'
         pylab.plot(centers,counts,marker,lw=2,color=colors[height],label=label)
-    import pdb
-    pdb.set_trace()
     pylab.legend(loc='upper right')
-    pylab.plot((1./30,1./30),(0,20),'--',lw=1.5,color='grey')
-    pylab.ylim((0,20))
+    pylab.plot((1./30,1./30),(0,50),'--',lw=1.5,color='grey')
+    pylab.ylim((0,40))
     pylab.xlabel('separation (pixels)')
     pylab.ylabel('Number')
     pylab.savefig('testimage_matches.png')
