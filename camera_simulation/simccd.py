@@ -18,6 +18,7 @@ Example:
 # from numpy import *
 # from pylab import *
 
+import pyfits
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -206,5 +207,7 @@ class SimCCD:
     
     def save(self,filename):
         """Save the current image to a .fits file named filename."""
+        hdu = pyfits.PrimaryHDU(self.image_int)
+        hdu.writeto(filename)
     #...
 #...
