@@ -13,7 +13,7 @@ import simccd2
 
 # inside a python window, do this:
 
-simCCD = simccd2.SimCCD(Ndim=(1000,1000))
+simCCD = simccd.SimCCD(Ndim=(1000,1000))
 simCCD(100,layout='Baltay_default')
 
 imcopy = simCCD.image.copy() # save a copy of the image
