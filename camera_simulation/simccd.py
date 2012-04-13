@@ -53,7 +53,7 @@ class Gaussian:
             return height*np.exp(-(((center_x-x)/sigma)**2+((center_y-y)/sigma)**2)/2)
 
         def cum_dist_func(x,y,height,sigma):
-            return (-0.5*sqrt(pi)*height*sigma)*(1-erf((center_x-x)/sigma))*((1-erf((center_y-y)/sigma)))
+            return (0.5*sqrt(pi)*height*sigma)**2*(1-erf((center_x-x)/sigma))*((1-erf((center_y-y)/sigma)))
         
         def skewness(center_x,center_y):
             return 3*sqrt(center_x**2+center_y**2)
