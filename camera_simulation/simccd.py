@@ -31,11 +31,11 @@ from scipy.special import erf
 
 class Gaussian:
     """Class to make single Gaussian Profile"""
-    def __init__(self,sigma,skew_param,skew_scale,height=40000):
+    def __init__(self,sigma,height=40000): #skew_param=0,skew_scale=0,
         self.sigma = sigma
         self.height = height
-        self.skew_param = skew_param
-        self.skew_scale = skew_scale
+        # self.skew_param = skew_param
+        # self.skew_scale = skew_scale
         
     def __call__(self,center_x,center_y,xygrid=None):
         """
@@ -54,17 +54,18 @@ class Gaussian:
         def cum_dist_func(x,y,height,sigma):
             return (-0.5*sqrt(pi)*height*sigma)*(1-erf((center_x-x)/sigma))*((1-erf((center_y-y)/sigma))
         
-        def skew_gaussian(x,y,w=1,a):
+        def skewness(a):
+            return lambda a: 3*sqrt(center_x**2+center_y**2)
+        
+        def skew_gaussian(x,y,w=1):
             tx=x/w
             ty=y/w
-            def skewness(a)
-                return lambda a: 3*sqrt(center_x^2+center_y^2)
-                #enter function, parameters which govern radial distortions
-            return (2/w)*gauss(tx,ty,self.height,self.sigma)*cum_dist_func(a*tx,a*ty,self.height.self.sigma)
+                # enter function, parameters which govern radial distortions
+            return (2/w)*gauss(tx,ty,self.height,self.sigma)*cum_dist_func(skewness(a)*tx,skewness(a)*ty,self.height.self.sigma)
        
-        return skew_gaussian(x,y)
+        return skew_gaussian(x,y,w=1)
             
-        # return gauss(x,y,self.height,self.sigma)
+        return gauss(x,y,self.height,self.sigma)
         
         
     #...
