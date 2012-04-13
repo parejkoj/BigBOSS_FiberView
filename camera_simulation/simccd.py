@@ -12,11 +12,6 @@ Example:
     simCCD(50,layout='random')
     simCCD.save('random_simulation.fits')
 """
-
-# import numpy as np
-# from numpy import *
-# from pylab import *
-
 import pyfits
 import numpy as np
 import matplotlib.pyplot as plt
@@ -31,13 +26,36 @@ from scipy.special import erf
 
 class Gaussian:
     """Class to make single Gaussian Profile"""
-    def __init__(self,sigma,skew=False,height=40000): #skew_param=0,skew_scale=0,
+    def __init__(self,sigma,skew=False,height=40000,skew_a=None): #skew_param=0,skew_scale=0,
         self.sigma = sigma
-        self.height = height
+        # TBD: what is the correct prefactor here?
+        self.height = height#*(sigma*sqrt(2*pi))**2
         self.skew = skew
+        if skew_a is None:
+            self.skew_a = 1/(sqrt(2)*500)
+        else:
+            self.skew_a = skew_a
         # self.skew_param = skew_param
         # self.skew_scale = skew_scale
-        
+    #...
+
+    def skewness(self,center_x,center_y):
+        """Returns a radially-dependent skewness parameter, alpha."""
+        return self.skew_a*sqrt(center_x**2+center_y**2)
+
+    def cum_dist_func(self,x,y,center_x,center_y,skew):
+        return (0.5*sqrt(pi)*self.sigma)**2*(1-erf(skew*(center_x-x)/self.sigma))*((1-erf(skew*(center_y-y)/self.sigma)))
+
+    def gauss(self,x,y,center_x,center_y):
+        """Returns a symmetric 2d gaussian profile, evaluated on the grid x,y."""
+        # TBD: check that the prefactor is correct.
+        return self.height*1./(self.sigma*sqrt(2*pi))*np.exp(-(((center_x-x)/self.sigma)**2+((center_y-y)/self.sigma)**2)/2)
+
+    def skew_gaussian(self,x,y,center_x,center_y):
+        """Returns a radially skewed 2d gaussian, evaluated on the grid x,y."""
+        skew = self.skewness(center_x,center_y)
+        return (2./self.sigma)*self.gauss(x,y,center_x,center_y)*self.cum_dist_func(x,y,center_x,center_y,skew)
+
     def __call__(self,center_x,center_y,xygrid=None):
         """
         Returns a symmetric 2d Gaussian profile, with a sigma in pixels.
@@ -49,27 +67,10 @@ class Gaussian:
         else:
             x,y = xygrid
 
-        def gauss(x,y,height,sigma):
-            return height*np.exp(-(((center_x-x)/sigma)**2+((center_y-y)/sigma)**2)/2)
-
-        def cum_dist_func(x,y,height,sigma):
-            return (0.5*sqrt(pi)*height*sigma)**2*(1-erf((center_x-x)/sigma))*((1-erf((center_y-y)/sigma)))
-        
-        def skewness(center_x,center_y):
-            return 3*sqrt(center_x**2+center_y**2)
-         # enter function, parameters which govern radial distortions
-        
-        def skew_gaussian(x,y,w=1):
-            tx=x/w
-            ty=y/w  
-            return (2./w)*gauss(tx,ty,self.height,self.sigma)*cum_dist_func(skewness(center_x,center_y)*tx,skewness(center_x,center_y)*ty,self.height,self.sigma)
-        
         if self.skew is True:
-            return skew_gaussian(x,y,w=1)
+            return self.skew_gaussian(x,y,center_x,center_y)
         else:
-            return gauss(x,y,self.height,self.sigma)
-        
-        
+            return self.gauss(x,y,center_x,center_y)
     #...
 #...
 
@@ -116,7 +117,7 @@ class SimCCD:
         self.image += np.random.poisson(15*t,self.image.size).reshape(self.image.shape)
     #...
 
-    def __call__(self,Npoints=None,layout='Baltay_default',width=2.,height=40000.,skew=False):
+    def __call__(self,Npoints=None,layout='Baltay_default',width=2.,height=40000.,skew=False,skew_a=None):
         """
         Generates an image with Npoints distributed by layout.
         Valid options for layout are:
@@ -129,11 +130,12 @@ class SimCCD:
         """
         self.image[:] = 0
         self.image_int[:] = 0
-        gaussian = Gaussian(width,height=height,skew=skew)
+        gaussian = Gaussian(width,height=height,skew=skew,skew_a=skew_a)
         if layout == 'Baltay_default':
             coordinates = np.loadtxt('../Baltay-fibers_residual.csv')
             for c in coordinates:
-                self.image += gaussian(c[3],c[4],xygrid=self.xygrid)
+                result = gaussian(c[3],c[4],xygrid=self.xygrid)
+                self.image += result
             coordinates = np.loadtxt('../Baltay-fibers_random.csv')
             for c in coordinates:
                 self.image += gaussian(c[1],c[2],xygrid=self.xygrid)

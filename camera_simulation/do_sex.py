@@ -73,9 +73,9 @@ def plot_hist(dist,flux):
     """
     Plot histograms of the distances, labeled appropriately.
     """
-    colors = {4000:'red',10000:'blue',40000:'green',-1:'black'}
+    colors = {400:'cyan',4000:'red',10000:'blue',40000:'green',-1:'black'}
     for name in naturalsort(dist.keys()):
-        counts,edges = np.histogram(dist[name],range=(0,0.03))
+        counts,edges = np.histogram(dist[name],range=(0,0.05))
         centers=(edges[1:]+edges[:-1])/2
         if '4_' in name:
             marker = '--'
