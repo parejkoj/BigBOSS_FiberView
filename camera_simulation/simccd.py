@@ -1,4 +1,3 @@
-#/usr/bin/env python
 """
 this is the framework for generating simulated CCD output.
 
@@ -7,7 +6,7 @@ like those expected from the FLI PL50100 dark current and read noise.
 
 Example:
     simCCD = SimCCD(Ndim=(1000,1000))
-    simCCD(100,layout='xygrid')
+    simCCD(100,layout='Baltay_default')
     pylab.matshow(simCCD.image) # plot the array
     simCCD.save('xy_simulation.fits')
     simCCD(50,layout='random')
@@ -23,14 +22,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
+from scipy import linspace
+from scipy import pi,sqrt,exp
+from scipy.special import erf
+
 # NOTE: scipy.ndimage and scipy.signal may have some useful tools.
 # NOTE: for testing purposes, pylab.matshow could be useful.
 
 class Gaussian:
     """Class to make single Gaussian Profile"""
-    def __init__(self,sigma,height=40000):
+    def __init__(self,sigma,skew_param,skew_scale,height=40000):
         self.sigma = sigma
         self.height = height
+        self.skew_param = skew_param
+        self.skew_scale = skew_scale
         
     def __call__(self,center_x,center_y,xygrid=None):
         """
@@ -44,9 +49,24 @@ class Gaussian:
             x,y = xygrid
 
         def gauss(x,y,height,sigma):
-            return height*np.exp(-(((center_x-x)/self.sigma)**2+((center_y-y)/self.sigma)**2)/2)
+            return height*np.exp(-(((center_x-x)/sigma)**2+((center_y-y)/sigma)**2)/2)
 
-        return gauss(x,y,self.height,self.sigma)
+        def cum_dist_func(x,y,height,sigma):
+            return (-0.5*sqrt(pi)*height*sigma)*(1-erf((center_x-x)/sigma))*((1-erf((center_y-y)/sigma))
+        
+        def skew_gaussian(x,y,w=1,a):
+            tx=x/w
+            ty=y/w
+            def skewness(a)
+                return lambda a: 3*sqrt(center_x^2+center_y^2)
+                #enter function, parameters which govern radial distortions
+            return (2/w)*gauss(tx,ty,self.height,self.sigma)*cum_dist_func(a*tx,a*ty,self.height.self.sigma)
+       
+        return skew_gaussian(x,y)
+            
+        # return gauss(x,y,self.height,self.sigma)
+        
+        
     #...
 #...
 
