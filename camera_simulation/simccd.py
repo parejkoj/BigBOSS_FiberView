@@ -17,7 +17,7 @@ Example:
 # from numpy import *
 # from pylab import *
 
-# import pyfits
+import pyfits
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -31,9 +31,10 @@ from scipy.special import erf
 
 class Gaussian:
     """Class to make single Gaussian Profile"""
-    def __init__(self,sigma,height=40000): #skew_param=0,skew_scale=0,
+    def __init__(self,sigma,skew=False,height=40000): #skew_param=0,skew_scale=0,
         self.sigma = sigma
         self.height = height
+        self.skew = skew
         # self.skew_param = skew_param
         # self.skew_scale = skew_scale
         
@@ -52,20 +53,21 @@ class Gaussian:
             return height*np.exp(-(((center_x-x)/sigma)**2+((center_y-y)/sigma)**2)/2)
 
         def cum_dist_func(x,y,height,sigma):
-            return (-0.5*sqrt(pi)*height*sigma)*(1-erf((center_x-x)/sigma))*((1-erf((center_y-y)/sigma))
+            return (-0.5*sqrt(pi)*height*sigma)*(1-erf((center_x-x)/sigma))*((1-erf((center_y-y)/sigma)))
         
-        def skewness(a):
-            return lambda a: 3*sqrt(center_x**2+center_y**2)
+        def skewness(center_x,center_y):
+            return 3*sqrt(center_x**2+center_y**2)
+         # enter function, parameters which govern radial distortions
         
         def skew_gaussian(x,y,w=1):
             tx=x/w
-            ty=y/w
-                # enter function, parameters which govern radial distortions
-            return (2/w)*gauss(tx,ty,self.height,self.sigma)*cum_dist_func(skewness(a)*tx,skewness(a)*ty,self.height.self.sigma)
-       
-        return skew_gaussian(x,y,w=1)
-            
-        return gauss(x,y,self.height,self.sigma)
+            ty=y/w  
+            return (2./w)*gauss(tx,ty,self.height,self.sigma)*cum_dist_func(skewness(center_x,center_y)*tx,skewness(center_x,center_y)*ty,self.height,self.sigma)
+        
+        if self.skew is True:
+            return skew_gaussian(x,y,w=1)
+        else:
+            return gauss(x,y,self.height,self.sigma)
         
         
     #...
@@ -114,7 +116,7 @@ class SimCCD:
         self.image += np.random.poisson(15*t,self.image.size).reshape(self.image.shape)
     #...
 
-    def __call__(self,Npoints=None,layout='Baltay_default'):
+    def __call__(self,Npoints=None,layout='Baltay_default',width=2.,height=40000.,skew=False):
         """
         Generates an image with Npoints distributed by layout.
         Valid options for layout are:
@@ -122,8 +124,12 @@ class SimCCD:
             random
             Baltay_default
             ???
+        width is the width of the Gaussian (==RMS), in pixels.
+        height is the value of the peak of the Gaussian.
         """
-        gaussian = Gaussian(2)
+        self.image[:] = 0
+        self.image_int[:] = 0
+        gaussian = Gaussian(width,height=height,skew=skew)
         if layout == 'Baltay_default':
             coordinates = np.loadtxt('../Baltay-fibers_residual.csv')
             for c in coordinates:
@@ -135,7 +141,7 @@ class SimCCD:
             raise ValueError("xygrid is not yet implemented. Fix this!")
         else:
             raise ValueError("I don't understand this layout: "+layout)
-
+        
         # TBD: check that this order is correct.
         # TBD: do we apply shot noise to pixels that only have dark current?
         self.dark_current()
@@ -146,9 +152,12 @@ class SimCCD:
         np.round(self.image,out=self.image_int)
     #...
     
-    def save(self,filename):
-        """Save the current image to a .fits file named filename."""
+    def save(self,filename,clobber=False):
+        """
+        Save the current image to a .fits file named filename.
+
+        Set clobber=True to overwrite the file if it exists."""
         hdu = pyfits.PrimaryHDU(self.image_int)
-        hdu.writeto(filename)
+        hdu.writeto(filename,clobber=clobber)
     #...
 #...

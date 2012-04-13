@@ -8,29 +8,32 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-# import simCCD
-import simccd2
+import simccd
 
-# inside a python window, do this:
+w = 2*np.sqrt(2*np.log(2)) # FWHM = w*sigma
+scale = 6. # microns/pixel
 
-simCCD = simccd.SimCCD(Ndim=(1000,1000))
-simCCD(100,layout='Baltay_default')
 
-imcopy = simCCD.image.copy() # save a copy of the image
-simCCD.dark_current()
+def makefile(simCCD,width,height,skew=True):
+    '''width in microns.'''
+    simCCD(100,layout='Baltay_default',width=width/scale,height=height,skew=skew)
+    filename = 'testimage_'+str(width)+'_'+str(int(np.round(height)))+'.fits'
+    simCCD.save(filename,clobber=True)
+    print 'saved:',filename
+#...
 
-# see how it looks. (figure out how to best to do this!)
-# if it didn't work, replace the image and try again.
+simCCD = simccd.SimCCD(Ndim=(1024,1024))
+makefile(simCCD,4,4e3)
+makefile(simCCD,4,1e4)
+makefile(simCCD,4,4e4)
 
-simCCD.image = imcopy
-simCCD.dark_current()
+makefile(simCCD,5,4e3)
+makefile(simCCD,5,1e4)
+makefile(simCCD,5,4e4)
 
-# for checking the execution time of a function, look at the timeit function
-# also, look at stackexchange for help with optimizing numpy/python
-# and look at the links I emailed you for ideas.
-# I bet you can get a ~5x speed up in shot_noise without much effort.
+# comment out to make the below plots appear.
+sys.exit()
 
-# do some statistical tests to see if your added noise is appropriate.
 
 plt.matshow(simCCD.image,cmap=cm.gist_ncar)
 plt.title('float image, linear scaling')
@@ -46,36 +49,3 @@ plt.title('int image, log10 scaling')
 plt.show()
 
 sys.exit()
-
-# for i in range(1000):
-    # for j in range(1000):
-        # image[i][j] +=np.random.normal(12.5)
-        #what is the standard deviation for readnoise?
-# image *= 12.5
-
-for c in coords:
-    image += gaussian_profile(2, c[0], c[1],3,xygrid=xygrid)
-    
-# def add_darkcurrent(x,temperature, duration):
-    # for i in range(1000):
-        # for j in range(1000):
-            # if temperature is 296:
-                # x[i][j] += 15*duration
-            # else:
-                # print "What is the temperature?"
-                
-def add_darkcurrent_roomtemp(x, duration):
-    for i in range(1000):
-        for j in range(1000):
-            x[i][j] += 15*duration
-                
-add_darkcurrent(image,10)
-
-for i in range(1000):
-    for j in range(1000):
-        image[i][j] += np.random.normal(12.5)
-
-
-    # image += np.random.poisson(3,gaussian_profile(2, c[0], c[1],xygrid=xygrid))
-# print image
-k

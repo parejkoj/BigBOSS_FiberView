@@ -73,21 +73,25 @@ def plot_hist(dist,flux):
     """
     Plot histograms of the distances, labeled appropriately.
     """
-    colors = {4000:'red',10000:'blue',40000:'green'}
+    colors = {4000:'red',10000:'blue',40000:'green',-1:'black'}
     for name in naturalsort(dist.keys()):
-        counts,edges = np.histogram(dist[name])
+        counts,edges = np.histogram(dist[name],range=(0,0.03))
         centers=(edges[1:]+edges[:-1])/2
         if '4_' in name:
             marker = '--'
         else:
             marker = '-'
-        height = int(name[2:])
-        label = name.replace('_','\mu m,\;\mathrm{height:}\,')
-        label = '$'+label+',\;\mathrm{flux:}'+str(np.round(flux[name]))+'$'
+        try:
+            height = int(name[2:])
+            label = name.replace('_','\mu m,\;\mathrm{height:}\,')
+            label = '$'+label+',\;\mathrm{flux:}'+str(np.round(flux[name]))+'$'
+        except ValueError:
+            height = -1
+            label = 'full noise'
         pylab.plot(centers,counts,marker,lw=2,color=colors[height],label=label)
     pylab.legend(loc='upper right')
-    pylab.plot((1./30,1./30),(0,20),'--',lw=1.5,color='grey')
-    pylab.ylim((0,20))
+    pylab.plot((1./30,1./30),(0,50),'--',lw=1.5,color='grey')
+    pylab.ylim((0,40))
     pylab.xlabel('separation (pixels)')
     pylab.ylabel('Number')
     pylab.savefig('testimage_matches.png')
