@@ -104,7 +104,7 @@ def main(argv=None):
     usage = '%prog [OPTIONS] FITSFILES'
     usage += '\nRun Sextractor on files and compare with known positions.'
     parser = OptionParser(usage)
-    parser.add_option('--save',dest='save',action='store_true',default=False,
+    parser.add_option('-s','--save',dest='save',action='store_true',default=False,
                       help='Save the sextractor output .fits files (%default).')
 
     (opts,args) = parser.parse_args(argv)

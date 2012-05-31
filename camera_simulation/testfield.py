@@ -14,10 +14,14 @@ w = 2*np.sqrt(2*np.log(2)) # FWHM = w*sigma
 scale = 6. # microns/pixel
 
 
-def makefile(simCCD,width,height,skew=False,skew_a=1./5000.):
+def makefile(simCCD,width,height,skew=False,skew_a=1./5.):
     '''width in microns.'''
     simCCD(100,layout='Baltay_default',width=width/scale,height=height,skew=skew,skew_a=skew_a)
-    filename = 'testimage_'+str(width)+'_'+str(int(np.round(height)))+'.fits'
+    if skew is True:
+        pre = '-skew_'
+    else:
+        pre = '_'
+    filename = 'testimage'+pre+str(width)+'_'+str(int(np.round(height)))+'.fits'
     simCCD.save(filename,clobber=True)
     print 'saved:',filename
 #...
