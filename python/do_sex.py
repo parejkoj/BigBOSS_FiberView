@@ -22,8 +22,8 @@ def run_sex(filename):
     """
     outfile = os.path.splitext(filename)[0]+'_sex.fits'
     cmd = ' '.join(('sex',filename,'-CATALOG_NAME',outfile))
-    stdout=open('temp/'+outfile+'.log','w')
-    stderr=open('temp/'+outfile+'.err','w')
+    stdout=open('../temp/'+outfile+'.log','w')
+    stderr=open('../temp/'+outfile+'.err','w')
     subprocess.call(cmd,shell=True,stdout=stdout,stderr=stderr)
     return np.array(pyfits.open(outfile)[1].data),outfile
 #...

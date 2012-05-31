@@ -21,7 +21,7 @@ def makefile(simCCD,width,height,skew=False,skew_a=1./5.):
         pre = '-skew_'
     else:
         pre = '_'
-    filename = 'testimage'+pre+str(width)+'_'+str(int(np.round(height)))+'.fits'
+    filename = '../data/testimage'+pre+str(width)+'_'+str(int(np.round(height)))+'.fits'
     simCCD.save(filename,clobber=True)
     print 'saved:',filename
 #...

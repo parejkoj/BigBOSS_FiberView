@@ -91,7 +91,7 @@ class SimCCD:
         x -= self.Nx/2
         y -= self.Ny/2
         self.xygrid = x,y
-    #...    
+    #...
 
     def shot_noise(self):
         """
@@ -117,7 +117,8 @@ class SimCCD:
         self.image += np.random.poisson(15*t,self.image.size).reshape(self.image.shape)
     #...
 
-    def __call__(self,Npoints=None,layout='Baltay_default',width=2.,height=40000.,skew=False,skew_a=None):
+    def __call__(self,Npoints=None,layout='Baltay_default',resid_only=False,
+                 width=2.,height=40000.,skew=False,skew_a=None):
         """
         Generates an image with Npoints distributed by layout.
         Valid options for layout are:
@@ -125,6 +126,7 @@ class SimCCD:
             random
             Baltay_default
             ???
+        set resid_only to True to only include the 'residual' points in the output.
         width is the width of the Gaussian (==RMS), in pixels.
         height is the value of the peak of the Gaussian.
         """
@@ -136,9 +138,10 @@ class SimCCD:
             for c in coordinates:
                 result = gaussian(c[3],c[4],xygrid=self.xygrid)
                 self.image += result
-            coordinates = np.loadtxt('../Baltay-fibers_random.csv')
-            for c in coordinates:
-                self.image += gaussian(c[1],c[2],xygrid=self.xygrid)
+            if not resid_only:
+                coordinates = np.loadtxt('../Baltay-fibers_random.csv')
+                for c in coordinates:
+                    self.image += gaussian(c[1],c[2],xygrid=self.xygrid)
         elif layout == 'xygrid':
             raise ValueError("xygrid is not yet implemented. Fix this!")
         else:
