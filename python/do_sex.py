@@ -14,6 +14,8 @@ import pyfits
 
 import csv_parse
 
+import fvmapping
+
 def run_sex(filename):
     """
     Run sextractor and read-in and return the output.
@@ -85,31 +87,16 @@ def read_positions():
     return points
 #...
 
-# !!!!!!!!!!!!!!!!!!!!
-# TBD: this isn't the right way to do it!
-# Add support for fvmapping.Transform
-# !!!!!!!!!!!!!!!!!!!!
 def match_positions(data,points):
     """
     Match to the positions in Baltay's files.
     """
-    x_data = 'Y_IMAGE_DBL'
-    y_data = 'X_IMAGE_DBL'
-    data[x_data] -= 513
-    data[y_data] -= 513
+    x = 'Y_IMAGE_DBL'
+    y = 'X_IMAGE_DBL'
 
-    # sort each by x then y, which should allow a direct 1-1 distance calculation.
-    data_key = np.argsort(data,order=(x_data,y_data))
-
-    dist = []
-    for pp in points:
-        minsep = 1000
-        for dd in data:
-            sep = np.sqrt((pp['x'] - dd[x_data])**2+(pp['y'] - dd[y_data])**2)
-            minsep = min(sep,minsep)
-        dist.append(minsep)
-    
-    return np.array(dist)
+    transform = fvmapping.Transform(points,np.array(zip(data[x],data[y])))
+    transform()
+    return transform.check()['dist']
 #...
 
 def naturalsort(l):
@@ -156,7 +143,8 @@ def main(argv=None):
     usage = '%prog [OPTIONS] FITSFILES'
     usage += '\nRun Sextractor on files and compare with known positions.'
     parser = OptionParser(usage)
-
+    parser.add_option('-p','--plot',dest='plot',action='store_true',default=False,
+                      help='Make some histograms of the results (%default).')
     (opts,args) = parser.parse_args(argv)
 
     if len(args) == 0:
@@ -167,17 +155,21 @@ def main(argv=None):
     dist = {}
     flux = {}
     for f in args:
-        name = os.path.splitext(f)[0].split('testimage_')[-1]
+        if 'testname' in f:
+            name = os.path.splitext(f)[0].split('testimage_')[-1]
+        else:
+            name = os.path.splitext(os.path.basename(f))[0].split('S')[-1]
         print 'Processing:',name
         measured,filename = run_sex(f)
         make_regions(measured,filename)
-        dist[name] = match_positions(measured,points)
+        #dist[name] = match_positions(measured,points)
+        #print 'Matches found:',len(dist[name])
         flux[name] = np.mean(measured['FLUX_ISO'])        
-        print 'Matches found:',len(dist[name])
-        print 'Flux and sigma(flux):',flux[name],np.std(measured['FLUX_ISO'])
-        print
+        print 'N, mean(flux) and sigma(flux):',len(measured),flux[name],np.std(measured['FLUX_ISO'])
+        #print
 
-    plot_hist(dist,flux)
+    if opts.plot:
+        plot_hist(dist,flux)
 #...
 
 if __name__ == "__main__":
