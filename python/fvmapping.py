@@ -60,6 +60,14 @@ class Transform:
         # NOTE: remember that T is an affine 3x3 matrix. So we need to convert xi
         # to a 3x1 "affine vector" and chop off the "1" in the last row before returning.
         return np.dot(self.T,self._affine_vector(xi))[:2]
+    #..
+
+    def get_scale(self):
+        """Return the overall scale factor of the matrix."""
+        x0 = np.array([1.,1.])
+        x0 /= np.linalg.norm(x0)
+        x1 = self.transform(x0)
+        return np.linalg.norm(x1)
     #...
 
     def _affine_vector(self,x):

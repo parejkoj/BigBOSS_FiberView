@@ -5,6 +5,7 @@ fibers positions in the invar plate, and compare the measured positions.
 """
 # Initial version: 2012.06.20 John Parejko
 import csv
+import os.path
 import numpy as np
 import numpy.core.records as rec
 import numpy.lib.recfunctions as recfunc
@@ -15,8 +16,9 @@ import fvmapping
 from kdtree_test.naive_pairs import xymatch
 
 import matplotlib
+matplotlib.use('Agg')
 from matplotlib import rc
-rc('text', usetex=True)
+#rc('text', usetex=True)
 import matplotlib.pyplot as plt
 plt.rcParams.update({'backend':'pdf',
                      'text.usetex':True,
@@ -60,7 +62,12 @@ def read_text(filename):
     except StopIteration:
         # we reached the end of the file
         pass
-    return rec.fromrecords(data,names=names,formats=parser._formats,shape=len(data))
+    result = rec.fromrecords(data,names=names,formats=parser._formats,shape=len(data))
+    if '1X' in filename:
+        # 'x' and 'y' are flipped with respect to each other (handled below),
+        # and one of them is also 'flipped' about the axis.
+        result['x'] = -result['x']
+    return result
 #...
 
 def read_fits(filename):
@@ -108,6 +115,10 @@ def plot_sep_vector(xy0,xy1,name):
     as given by T(xy1)."""
     transform = fvmapping.Transform(xy1,xy0)
     transform()
+    #import pdb
+    #pdb.set_trace()
+    # print the translations, scale, and (eventually) rotation angle
+    print transform.T[0:2,2],transform.get_scale()
     points = transform.transform_all()
     match = transform.check()
     diff0 = points[match['idx1']] - xy0[match['idx2']]
@@ -117,6 +128,8 @@ def plot_sep_vector(xy0,xy1,name):
     rdiff0 = np.sqrt((diff0**2).sum(axis=1))
     rdiff1 = np.sqrt((diff1**2).sum(axis=1))
     rdiff01 = np.sqrt((diff01**2).sum(axis=1))
+    #import pdb
+    #pdb.set_trace()
 
     extent = (-100,600,-150,300)
     xticks = np.arange(-100,600,100)
@@ -186,10 +199,11 @@ def plot_sep_vector(xy0,xy1,name):
     plot_fit(r,rdiff0,rfit,'r','blue')
     plt.xlabel('coordinate (mm)')
     plt.ylabel('offset from specified position (mm)')
-    plt.title('residual offsets after transforming: '+name)
+    # need the replace there because LaTeX doesn't like '_' by itself.
+    plt.title(r'residual offsets after transforming: %s'%name.replace('_','\_'))
     plt.legend(loc='upper left')
     filename = '../plots/separation_offsets-'+name+'.png'
-    plt.savefig(filename,bbox_inches='tight')
+    plt.savefig(filename,bbox_inches='tight',dpi=150)
     print 'Generated:',filename
     #import pdb
     #pdb.set_trace()
@@ -216,9 +230,9 @@ def plot_sep_hist(x,y,isFits=False):
         bins = 50
     range = (min((x.std(axis=0).min(),y.std(axis=0).min(),r.std(axis=0).min())),
              max((x.std(axis=0).max(),y.std(axis=0).max(),r.std(axis=0).max())))
-    hist_sigma(x,'x',N,bins,range)
-    hist_sigma(y,'y',N,bins,range)
-    hist_sigma(r,r'$r=(x^2+y^2)$',N,bins,range)
+    hist_sigma(x,'$x$',N,bins,range)
+    hist_sigma(y,'$y$',N,bins,range)
+    hist_sigma(r,r'$r=\sqrt{x^{2}+y^{2}}$',N,bins,range)
     if isFits:
         units = '\mathrm{pixels}'
     else:
@@ -280,10 +294,18 @@ def main(argv=None):
     data = {}
     if 'txt' in args[0] or 'TXT' in args[0]:
         for f in args:
-            name = f.split('pass')[-1].split('good')[0]
+            if 'pass' in f:
+                name = f.split('pass')[-1].split('good')[0]
+                xname = 'x'
+                yname = 'y'
+            else:
+                name = os.path.splitext(os.path.basename(f))[0]
+                # The files from Stephen have 'x' and 'y' flipped
+                # TBD: Leaving these reversed these is a good test of the code.
+                xname = 'y'
+                yname = 'x'
+            print 'Now reading:',f
             data[name] = read_text(f)
-            xname = 'x'
-            yname = 'y'
             isFits = False
     elif 'fits' in args[0]:
         for f in args:
